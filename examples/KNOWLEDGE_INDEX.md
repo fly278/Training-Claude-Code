@@ -1,34 +1,43 @@
-# KNOWLEDGE_INDEX.md — 项目知识快速索引
+# KNOWLEDGE_INDEX.md — 项目知识索引
 
-> 生成: 2026-05-21 | 工具: 全项目扫描
+> 快速定位项目中任何概念的位置。新会话的入口。
 
 ---
 
-## 文档清单
+## 使用方法
+- Claude 新会话开始时，可先 Read 此文件了解项目全貌
+- 查找特定概念时，直接搜索对应章节
+- 新增知识时更新此索引
 
-| 文档 | 路径 | 摘要 |
+---
+
+## 模板
+
+### 项目概述
+- **名称**: 你的项目名
+- **用途**: 一句话描述
+- **技术栈**: 语言 + 框架 + 数据库
+- **结构**: 顶层目录说明
+
+### 核心模块
+| 模块 | 路径 | 用途 | 关键文件 |
+|------|------|------|---------|
+| <!-- 填写 --> | | | |
+
+### 配置文件
+| 文件 | 用途 | 修改频率 |
+|------|------|---------|
+| .env | 环境变量 | 低 |
+| config/*.json | 应用配置 | 中 |
+
+### 常用命令
+| 命令 | 用途 |
+|------|------|
+| npm run dev | 启动开发服务器 |
+| npm test | 运行测试 |
+| npm run build | 构建生产版本 |
+
+### 外部文档
+| 资源 | 链接 | 用途 |
 |------|------|------|
-| CLAUDE.md (项目) | [/CLAUDE.md](CLAUDE.md) | 项目级AI指令：编排规则、工具选择、路径作用域 |
-| CLAUDE.md (全局) | [~/.claude/CLAUDE.md] | 用户级AI指令：通信、代码生成、文件编辑全局规范 |
-| INTEGRATION.md | [/orchestrator/INTEGRATION.md](orchestrator/INTEGRATION.md) | 完整派发规则：何时用OpenClaw/VS Code/Claude Code |
-| task-router.md | [/orchestrator/task-router.md](orchestrator/task-router.md) | 路由决策矩阵：能力边界、触发关键词、歧义处理 |
-| SKILLS_SOP.md | [/SKILLS_SOP.md](SKILLS_SOP.md) | 标准操作程序：所有工具/skills的用法和错误处理 |
-| MEMORY.md | [/MEMORY.md](MEMORY.md) | 项目长期记忆：偏好、架构、命令、教训、泛化原则 |
-| DEPENDENCY_MAP.md | [/DEPENDENCY_MAP.md](DEPENDENCY_MAP.md) | 组件依赖关系图 + 改动影响矩阵 + 外部依赖清单 |
-| SELF_CHECK.md | [/SELF_CHECK.md](SELF_CHECK.md) | 计划先行 + 事后自查 + 多步推理 + 5条硬规则 |
-| AGENT_TEAM.md | [/AGENT_TEAM.md](AGENT_TEAM.md) | 三人内部团队(Arki/Tester/Guardian)设计与协作规则 |
-| AAR_TEMPLATE.md | [/AAR_TEMPLATE.md](AAR_TEMPLATE.md) | 复盘模板 + 估工量校准机制 |
-| FINETUNING_DATA.md | [/FINETUNING_DATA.md](FINETUNING_DATA.md) | 微调数据采撷标准 + DeepSeek v4采集建议 |
-
----
-
-## 快速定位指南
-
-| 你想... | 去这里 |
-|----------|--------|
-| 理解整体架构 | KNOWLEDGE_INDEX.md (本文件) |
-| 查工具使用方法 | SKILLS_SOP.md |
-| 查派发规则 | orchestrator/INTEGRATION.md |
-| 添加新connector | 参考 rules/connector-scripts.md + 现有connector |
-| 修改路由规则 | orchestrator/task-router.md |
-| 查历史教训 | MEMORY.md §5 |
+| <!-- API文档、设计稿等 --> | | |

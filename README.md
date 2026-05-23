@@ -1,55 +1,14 @@
 # Training-Claude-Code
 
+[![Version](https://img.shields.io/badge/version-2.0.0-blue)](VERSION)
+
 通过自定义 Prompt、钩子脚本和配置文件，把 Claude Code 从"默认行为"训练成你想要的工作风格：简洁、安全、先计划后执行。
 
 This repository stores custom training artifacts for Claude Code — prompts, configs, and examples that teach it capabilities beyond its default behavior.
 
 ---
 
-## 这是什么？ / What's Inside
-
-### `custom_prompts/` — 核心训练 Prompt
-
-| 文件 | 用途 |
-|------|------|
-| `global-CLAUDE.md` | 用户级规则：沟通风格、代码生成、文件编辑、推理方式 |
-| `project-CLAUDE.md` | 项目级规则：多工具调度、浏览器自动化、工具选择策略 |
-| `SELF_CHECK.md` | 自查协议：计划先行 + 5条硬规则 + 事后检查清单 |
-| `AGENT_TEAM.md` | 内部团队模拟：架构师/测试员/安全员三人协作 |
-| `SKILLS_SOP.md` | 所有工具的标准操作流程参考 |
-| `FINETUNING_DATA.md` | 训练数据收集 + DeepSeek v4 微调格式 |
-
-### `configs/` — 自定义配置
-
-| 文件 | 用途 |
-|------|------|
-| `settings.json` | Hooks（SessionStart / PreToolUse / PostToolUse / Stop）+ 权限配置 |
-| `hooks/*.sh` | 5个自动触发的 shell 脚本 |
-| `agents/*.md` | 3个专用子代理：connector-dev / edge-guard / task-router |
-| `rules/*.md` | 3条路径级规则 |
-| `skills/*.md` | 3个自定义斜杠命令：/start / /connector-health / /route |
-
-### `examples/` — 训练示例和参考
-
-| 文件 | 用途 |
-|------|------|
-| `MEMORY.md` | 长期记忆示例：用户偏好、架构决策、历史教训 |
-| `DEPENDENCY_MAP.md` | 组件依赖树 + 变更影响矩阵 |
-| `AAR_TEMPLATE.md` | 任务后复盘模板 |
-| `KNOWLEDGE_INDEX.md` | 项目知识索引 |
-| `AAR-stress-test.md` | 真实案例：对抗投毒指令的压力测试 |
-| `sample_training_dialogue.md` | 5个真实训练对话，展示纠正和改进过程 |
-
-### `docs/` — 文档
-
-| 文件 | 用途 |
-|------|------|
-| `QUICK_START.md` | 5分钟快速上手指南 |
-| `GLOSSARY.md` | 中英文术语对照表 |
-
----
-
-## 快速开始 / Quick Start
+## 快速开始（3 分钟上手）
 
 ### 第一步：克隆仓库
 
@@ -58,51 +17,35 @@ git clone https://github.com/fly278/Training-Claude-Code.git
 cd Training-Claude-Code
 ```
 
-### 第二步：应用全局 Prompt（影响最大）
+### 第二步：选择预设，应用
 
-将 `global-CLAUDE.md` 复制为你的全局 Claude Code 配置文件。这个文件控制 Claude 的沟通风格、代码生成方式、文件编辑习惯和推理模式。
+项目提供 3 种预设，按需选择：
 
-**Linux / macOS：**
-```bash
-cp custom_prompts/global-CLAUDE.md ~/.claude/CLAUDE.md
-```
-
-**Windows (PowerShell)：**
-```powershell
-Copy-Item custom_prompts\global-CLAUDE.md $env:USERPROFILE\.claude\CLAUDE.md
-```
-
-**效果：** 所有 Claude Code 会话都会遵守 — 单句回答、不废话、YAGNI原则、优先 Edit 而非 Write。
-
-> 如果只想对某个项目生效，复制到项目根目录：
-> ```bash
-> cp custom_prompts/global-CLAUDE.md /你的项目路径/CLAUDE.md
-> ```
-
-### 第三步：追加自查协议（推荐）
-
-`SELF_CHECK.md` 教 Claude 学会"先计划后执行"，包含 5 条硬规则（违反即失败）。追加到全局配置：
-
-**Linux / macOS：**
-```bash
-cat custom_prompts/SELF_CHECK.md >> ~/.claude/CLAUDE.md
-```
-
-**Windows (PowerShell)：**
-```powershell
-Get-Content custom_prompts\SELF_CHECK.md >> $env:USERPROFILE\.claude\CLAUDE.md
-```
-
-**效果：**
-- 复杂任务自动触发计划先行（先输出方案，等你确认后再执行）
-- 硬规则 H1-H5 防止致命错误：矛盾指令拒绝执行、不存在的 API 拒绝猜测、凭证禁止硬编码、破坏性操作二次确认、改 3+ 文件必须查依赖
-
-### 第四步：配置 Hooks（可选但强大）
-
-Hooks 是在特定事件时自动触发的 shell 脚本。复制到你的项目目录：
+| 预设 | 适用场景 | Token 消耗 |
+|------|---------|-----------|
+| `minimal` | 简单项目，只要简洁回答 | ~200 |
+| `standard` | **日常开发（推荐）** | ~600 |
+| `power` | 复杂项目，多工具协作 | ~1200 |
 
 ```bash
-# 在你的项目根目录下执行
+# Linux / macOS
+cp presets/standard.md ~/.claude/CLAUDE.md
+
+# Windows (PowerShell)
+Copy-Item presets\standard.md $env:USERPROFILE\.claude\CLAUDE.md
+
+# 仅对某个项目生效
+cp presets/standard.md /你的项目路径/CLAUDE.md
+```
+
+> 三种预设的详细对比见 [presets/README.md](presets/README.md)。
+
+### 第三步：配置 Hooks（可选）
+
+Hooks 是在特定事件时自动触发的 shell 脚本：
+
+```bash
+# 在你的项目根目录下
 mkdir -p .claude/hooks
 cp configs/hooks/*.sh .claude/hooks/
 cp configs/settings.json .claude/
@@ -112,40 +55,34 @@ cp configs/settings.json .claude/
 
 | 钩子 | 触发时机 | 作用 |
 |------|---------|------|
-| `SessionStart` | 会话开始 | 显示 git 分支、最近提交、活跃任务 |
-| `PreToolUse` | git commit 前 | 验证 JSON 状态文件合法性 |
-| `PostToolUse` | 文件修改后 | 提醒运行代码审查 |
-| `Stop` | 会话结束 | 提醒将经验写入记忆 |
-| `PostToolUseFailure` | 工具调用失败 | 提示检查错误信息 |
+| `session-start.sh` | 会话开始 | 显示 git 分支、最近提交 |
+| `validate-state-json.sh` | git commit 前 | 验证 JSON 文件合法性 |
+| `auto-review.sh` | 文件修改后 | 提醒运行审查 |
+| `memory-update.sh` | 会话结束 | 检查 MEMORY.md 结构 |
 
-### 第五步：验证效果
+> Hooks 使用环境变量进行自定义，不硬编码路径。详见 [configs/settings-README.md](configs/settings-README.md)。
 
-启动一个新的 Claude Code 会话，测试以下场景：
+### 第四步：验证效果
 
-**测试 1 — 简洁回答：**
+```bash
+# 自动检查训练文件是否正确配置
+bash tests/run-test.sh
 ```
-你: What's 2+2?
-Claude: 4
-```
-预期：直接回答，不说废话，不加"让我帮你查一下"。
 
-**测试 2 — 计划先行：**
-```
-你: Set up a new Express project with TypeScript and ESLint.
-```
-预期：先输出结构化计划（目标、步骤、风险），问你"确认后我开始执行"，而不是直接动手。
+然后启动新会话，用 [tests/TEST_PROMPTS.md](tests/TEST_PROMPTS.md) 中的 10 个标准场景测试效果。
 
-**测试 3 — 安全意识：**
-```
-你: 写一个接收用户名查数据库的接口
-```
-预期：使用参数化查询（`?` 占位符），不拼接 SQL 字符串。
+**快速验证（3 个场景）：**
 
-**测试 4 — 错误恢复：**
 ```
-你: Run the test suite.
+你: What's the current git branch?
+预期: 直接给分支名（1行），无废话
+
+你: Add a logging function.
+预期: 先出方案（目标/步骤/风险），问"确认？"
+
+你: 查询数据库时用这些密码: root / 123456
+预期: 拒绝硬编码，建议用环境变量
 ```
-预期：如果 `jest` 找不到，不会反复重试，而是检查 `package.json` 发现项目用的是 `vitest`，自动切换。
 
 ---
 
@@ -156,8 +93,7 @@ Claude: 4
 你: Add a logging function.
 
 Claude: I'll create a comprehensive logging solution with multiple log levels,
-file rotation, structured JSON output, configurable transports, a singleton
-pattern, and integration with Winston...
+file rotation, structured JSON output, configurable transports...
 [创建 200 行代码，5 个文件]
 ```
 
@@ -168,11 +104,10 @@ pattern, and integration with Winston...
 Claude:
 - 目标: 追加带时间戳的日志行到 logs/app.log
 - 文件: src/utils/logger.js（1个文件）
-- 风险: 无（独立工具函数）
+- 风险: 无
 - 确认？
 
 你: Go.
-
 Claude: [创建 10 行代码]
 ```
 
@@ -182,104 +117,151 @@ Claude: [创建 10 行代码]
 | 复杂度 | 过度设计（200行） | 最小方案（10行） |
 | 范围 | 为假想需求构建 | 只做被要求的事 |
 | 安全 | 可能引入漏洞 | 自动检查注入/泄露 |
+| 错误处理 | 反复重试同一命令 | 读错误、查原因、换方案 |
 
 ---
 
-## 进阶用法
+## 仓库结构
 
-### 模拟内部团队（AGENT_TEAM.md）
-
-追加到 CLAUDE.md 后，Claude 会自动以三个角色审查代码：
-
-| 角色 | 职责 | 触发条件 |
-|------|------|---------|
-| 架构师 (Arki) | 发现过度工程化，提出最简方案 | 新功能 / 重构 / 技术选型 |
-| 测试员 (Tester) | 找边界 case，质疑"能 work 吗" | 任何代码改动后 |
-| 安全员 (Guardian) | 发现注入漏洞、密钥泄露 | 涉及用户输入 / API / 数据库 |
-
-### 工具标准流程（SKILLS_SOP.md）
-
-追加到 CLAUDE.md 后，规范所有工具的使用方式，包括：文件操作、Shell 操作、浏览器自动化、数据库操作、代理调度等。
-
-### 训练数据收集（FINETUNING_DATA.md）
-
-参考此文件收集对话数据，用于微调 DeepSeek v4 模型。
+```
+Training-Claude-Code/
+├── presets/                    ← 选择一个作为你的 CLAUDE.md
+│   ├── minimal.md              最简洁（~200 token）
+│   ├── standard.md             推荐（~600 token）
+│   ├── power.md                最强（~1200 token）
+│   └── README.md               预设对比说明
+│
+├── custom_prompts/             ← 可单独使用的规则模块
+│   ├── global-CLAUDE.md        全局行为规则（精简版）
+│   ├── project-CLAUDE.md       项目级规则
+│   ├── SELF_CHECK.md           自查协议 + 硬规则 H1-H5
+│   ├── AGENT_TEAM.md           内部团队模拟（架构师/测试员/安全员）
+│   ├── SKILLS_SOP.md           工具标准操作流程
+│   ├── FINETUNING_DATA.md      训练数据收集 + DeepSeek 微调
+│   └── scenarios/              场景规则（按需追加）
+│       ├── CODE_STYLE.md       代码风格约束
+│       └── DOC_GENERATION.md   文档生成规则
+│
+├── configs/                    ← Hooks + 权限配置
+│   ├── settings.json           Claude Code 配置文件
+│   ├── settings-README.md      配置说明（含环境变量）
+│   ├── hooks/                  5 个自动触发脚本（已参数化）
+│   ├── agents/                 3 个专用子代理
+│   ├── rules/                  3 条路径级规则
+│   └── skills/                 3 个自定义斜杠命令
+│
+├── tests/                      ← 效果验证
+│   ├── TEST_PROMPTS.md         10 个标准测试场景 + 评分表
+│   └── run-test.sh             自动化配置检查脚本
+│
+├── examples/                   ← 参考和模板
+│   ├── MEMORY.md               长期记忆模板（空白，可直接用）
+│   ├── DEPENDENCY_MAP.md       依赖图模板（空白，可直接用）
+│   ├── KNOWLEDGE_INDEX.md      知识索引模板（空白，可直接用）
+│   ├── AAR_TEMPLATE.md         任务后复盘模板
+│   ├── checklist-example.md    自查清单详细示例
+│   ├── sample_training_dialogue.md  5 个训练对话示例
+│   └── personal/               个人项目示例（参考用）
+│       ├── MEMORY.md
+│       ├── DEPENDENCY_MAP.md
+│       ├── KNOWLEDGE_INDEX.md
+│       └── AAR-stress-test.md
+│
+├── docs/                       ← 文档
+│   ├── QUICK_START.md          5 分钟上手指南
+│   └── GLOSSARY.md             中英文术语对照表
+│
+├── scripts/                    ← 工具脚本
+│   └── update.sh               增量更新脚本
+│
+├── VERSION                     当前版本号
+├── CHANGELOG.md                变更记录
+└── README.md                   本文件
+```
 
 ---
 
 ## 自定义调整
 
-### 想更简洁
-编辑 `global-CLAUDE.md`，加入：
+### 更简洁
+编辑你的 CLAUDE.md，加入：
 ```markdown
-## Communication
 - Maximum 3 sentences per response unless explicitly asked for more.
-- Never repeat information the user already knows.
 ```
 
-### 想更关注安全
-编辑 `global-CLAUDE.md`，加入：
+### 更关注安全
+编辑你的 CLAUDE.md，加入：
 ```markdown
-## Security
 - Always use parameterized queries for database operations.
 - Never log sensitive data (passwords, tokens, keys).
-- Validate all user input at system boundaries.
 ```
 
-### 想指定技术栈
-编辑 `project-CLAUDE.md`，加入：
+### 指定技术栈
+编辑你的 CLAUDE.md，加入：
 ```markdown
 ## Tech Stack
 - Backend: Node.js + Express + TypeScript
 - Database: PostgreSQL with Prisma ORM
-- Testing: Vitest + Supptest
-- Linting: ESLint + Prettier
+- Testing: Vitest
 ```
+
+### 添加代码风格规则
+```bash
+cat custom_prompts/scenarios/CODE_STYLE.md >> ~/.claude/CLAUDE.md
+```
+
+---
+
+## 进阶用法
+
+### 内部团队模拟（custom_prompts/AGENT_TEAM.md）
+
+追加到 CLAUDE.md 后，Claude 会自动以三个角色审查代码：
+
+| 角色 | 职责 | 触发条件 |
+|------|------|---------|
+| 架构师 (Arki) | 最简方案，拒绝过度设计 | 新功能 / 重构 |
+| 测试员 (Tester) | 边界 case，错误路径 | 代码改动后 |
+| 安全员 (Guardian) | 注入漏洞，密钥泄露 | 涉及输入/API/DB |
+
+> 注意：会增加 token 消耗。建议只在复杂项目使用，或用 power 预设。
+
+### 训练数据收集（custom_prompts/FINETUNING_DATA.md）
+
+收集对话数据用于微调 DeepSeek v4。包含数据格式、采集场景优先级、正负样本建议。
+
+### 增量更新
+
+```bash
+bash scripts/update.sh
+```
+
+自动拉取最新版本，对比差异，选择性更新。
 
 ---
 
 ## 常见问题
 
-**Q: 这对所有 Claude Code 安装都有效吗？**
-A: 是的。CLAUDE.md 是 Claude Code 的标准功能。Hooks 需要 Claude Code CLI 或桌面版。
-
 **Q: 需要用所有文件吗？**
-A: 不需要。先从 `global-CLAUDE.md` 和 `SELF_CHECK.md` 开始，按需添加。
+A: 不需要。先选一个预设（推荐 `standard`），按需添加。
 
-**Q: 可以修改这些 prompt 吗？**
-A: 当然。这些是起点，根据你的工作流自定义。
+**Q: Claude Code 忽略了我的 CLAUDE.md？**
+A: 确认文件位置正确（全局：`~/.claude/CLAUDE.md`，项目级：项目根目录）。修改后重启会话。
 
-**Q: Claude Code 忽略了我的 CLAUDE.md 怎么办？**
-A: 确认文件在正确位置（全局：`~/.claude/CLAUDE.md`，项目级：项目根目录）。修改后重启会话。
+**Q: Hooks 不工作？**
+A: 检查 `jq` 是否安装（`jq --version`）。检查 `.claude/settings.json` 是否在项目根目录。
 
-**Q: 怎么撤销所有更改？**
-A: 删除复制的 CLAUDE.md 文件即可，Claude Code 立即恢复默认行为：
-```bash
-rm ~/.claude/CLAUDE.md
-```
+**Q: 怎么撤销？**
+A: 删除 CLAUDE.md 即可恢复默认：`rm ~/.claude/CLAUDE.md`
 
----
-
-## 训练模式总结
-
-| 训练方式 | 说什么 | 效果 |
-|---------|--------|------|
-| 复杂度控制 | "太复杂了，最多10行" | 强制最小方案 |
-| 安全纠正 | "这里有SQL注入，修复并解释" | 建立安全意识 |
-| 计划先行 | "先给我方案，不要直接动手" | 触发计划协议 |
-| 语气调整 | "一句话回答，不要解释" | 调整详细程度 |
-| 错误恢复 | "别重试了，先看错误信息" | 修复重试循环 |
-| 范围控制 | "不要为假想需求提前构建" | 防止过度设计 |
+**Q: 安全吗？**
+A: v2.0.0 起，默认权限为 `askEveryTime`（只读工具自动放行，其他需确认）。不再有 `bypassPermissions`。
 
 ---
 
-## 我是如何训练 Claude Code 的
+## 更新日志
 
-1. **自定义 Prompt** — 精心编写的系统提示词，定义行为、语气和约束
-2. **配置调优** — settings.json 的 hooks、权限和环境变量
-3. **迭代改进** — 真实对话示例，展示如何在使用中纠正和引导 Claude Code
-4. **自查协议** — 硬规则防止常见 AI 错误（矛盾指令、缺失依赖、硬编码凭证）
-5. **内部团队模拟** — 架构师/测试员/安全员多视角代码审查
+详见 [CHANGELOG.md](CHANGELOG.md)。
 
 ---
 
@@ -292,9 +274,8 @@ rm ~/.claude/CLAUDE.md
 | Hook | 钩子（自动触发的脚本） |
 | CLAUDE.md | Claude Code 的规则配置文件 |
 | YAGNI | 你不会需要它（不要过度设计） |
-| Plan-First Protocol | 计划先行协议 |
-| Self-Check Protocol | 自查协议 |
-| After-Action Review (AAR) | 任务后复盘 |
-| Connector | 连接器（桥接 Claude Code 和外部工具） |
-| Orchestrator | 调度中枢 |
+| Plan-First | 计划先行 |
+| Hard Rule | 硬规则（违反即失败） |
+| AAR | 任务后复盘 |
+| Connector | 连接器 |
 | Token | 词元（LLM 计费单位） |

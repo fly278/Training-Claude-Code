@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 # Hook: PreToolUse (Bash)
-# Validates JSON state files before git commit.
-# Exits early (0) if the command is NOT a git commit touching state files.
+# Validates JSON files before git commit.
+# Exits early (0) if the command is NOT a git commit touching JSON files.
 
-# Read hook input from stdin
 input=$(cat)
 cmd=$(echo "$input" | jq -r '.tool_input // ""' 2>/dev/null || true)
 
@@ -12,13 +11,21 @@ if ! echo "$cmd" | grep -qE '^git commit'; then
   exit 0
 fi
 
-# Check if state files are in the staging area
+# Check staged JSON files
 staged=$(git diff --cached --name-only 2>/dev/null || true)
-if ! echo "$staged" | grep -qE 'orchestrator/state/.*\.json'; then
+json_files=$(echo "$staged" | grep -E '\.json$' || true)
+
+if [ -z "$json_files" ]; then
   exit 0
 fi
 
-echo "[validate-state-json] checking staged state files..."
+echo "[validate-json] checking staged JSON files..."
+
+# Require jq
+if ! command -v jq >/dev/null 2>&1; then
+  echo "[validate-json] WARNING: jq not installed, skipping validation"
+  exit 0
+fi
 
 failures=0
 while IFS= read -r f; do
@@ -29,12 +36,12 @@ while IFS= read -r f; do
   else
     echo "  valid: $f"
   fi
-done <<< "$(echo "$staged" | grep -E 'orchestrator/state/.*\.json')"
+done <<< "$json_files"
 
 if [ "$failures" -gt 0 ]; then
-  echo "[validate-state-json] BLOCKED — $failures file(s) with invalid JSON. Fix before committing."
+  echo "[validate-json] BLOCKED — $failures file(s) with invalid JSON."
   exit 1
 fi
 
-echo "[validate-state-json] OK"
+echo "[validate-json] OK"
 exit 0
