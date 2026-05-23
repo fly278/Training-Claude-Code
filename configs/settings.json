@@ -57,15 +57,6 @@
         "hooks": [
           {
             "type": "command",
-            "command": "echo '{\"systemMessage\": \"Session ending: run /claude-md-management (revise-claude-md) to capture learnings in project knowledge base.\"}'"
-          }
-        ]
-      },
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
             "command": "bash .claude/hooks/memory-update.sh"
           }
         ]
@@ -84,9 +75,12 @@
     ]
   },
   "permissions": {
-    "defaultMode": "bypassPermissions",
+    "defaultMode": "askEveryTime",
     "allow": [
-      "*"
+      "Read",
+      "Glob",
+      "Grep",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []

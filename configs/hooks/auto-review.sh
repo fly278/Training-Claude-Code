@@ -1,17 +1,21 @@
 #!/usr/bin/env bash
-# Auto-Review Hook — PostToolUse (Write|Edit)
-# When connector or core script files are modified, reminds to run cross-review.
-set -euo pipefail
+# Hook: PostToolUse (Write|Edit)
+# After editing key files, reminds to run review and check dependencies.
+
+# ============================================================
+# CONFIG: Patterns that trigger a review reminder
+# Edit these to match your project's critical paths
+# ============================================================
+REVIEW_PATTERNS="${CLAUDE_REVIEW_PATTERNS:-(\.claude/|\.github/|src/)}"
+# ============================================================
 
 TOOL_INPUT="${CLAUDE_TOOL_INPUT:-}"
 if [ -z "$TOOL_INPUT" ]; then
-  echo '{"continue":true}'
   exit 0
 fi
 
-# Check if the modified file is a connector, script, or settings file
-if echo "$TOOL_INPUT" | grep -qE '(orchestrator/connectors/|scripts/|\.claude/settings|\.claude/hooks/|token-saver/)'; then
-  echo '{"systemMessage":"CROSS-REVIEW: Modified a core infrastructure file. Run health check on affected connectors. Check DEPENDENCY_MAP.md for downstream impact.","continue":true}'
+if echo "$TOOL_INPUT" | grep -qE "$REVIEW_PATTERNS"; then
+  echo '{"systemMessage":"CROSS-REVIEW: Modified a key file. Run tests and check DEPENDENCY_MAP.md for downstream impact.","continue":true}'
 fi
 
-echo '{"continue":true}'
+exit 0

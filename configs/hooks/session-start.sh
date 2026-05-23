@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 # Hook: SessionStart
-# Shows current branch, recent commits, connector health summary.
+# Shows current branch, recent commits, and project health.
 # Non-blocking — always exits 0.
 
-echo "[orchestrator] session starting..."
+# ============================================================
+# CONFIG: Edit these to match your project structure
+# ============================================================
+STATE_FILE="${CLAUDE_STATE_FILE:-}"          # e.g. "orchestrator/state/current-task.json"
+CONNECTORS_DIR="${CLAUDE_CONNECTORS_DIR:-}" # e.g. "orchestrator/connectors"
+# ============================================================
 
-# Git orientation (if in a repo)
+echo "[session] starting..."
+
+# Git orientation
 if git rev-parse --git-dir >/dev/null 2>&1; then
   branch=$(git branch --show-current 2>/dev/null || echo "detached")
   echo "  branch: $branch"
@@ -16,25 +23,21 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   fi
 fi
 
-# Quick connector health (fast checks only, no network calls that might hang)
-if [ -x orchestrator/connectors/openclaw-connector.sh ]; then
-  echo "  openclaw-connector: present"
-fi
-if [ -x orchestrator/connectors/vscode-connector.sh ]; then
-  echo "  vscode-connector: present"
-fi
-
-# Check for active task
-if [ -f orchestrator/state/current-task.json ]; then
-  task_id=$(jq -r '.id // "unknown"' orchestrator/state/current-task.json 2>/dev/null || echo "unreadable")
-  task_status=$(jq -r '.status // "unknown"' orchestrator/state/current-task.json 2>/dev/null || echo "unreadable")
-  echo "  active task: $task_id ($task_status)"
+# Connector health (if configured)
+if [ -n "$CONNECTORS_DIR" ] && [ -d "$CONNECTORS_DIR" ]; then
+  for c in "$CONNECTORS_DIR"/*.sh; do
+    [ -x "$c" ] && echo "  connector: $(basename "$c") present"
+  done
 fi
 
-# Suggest /start for fresh projects with no state files
-if [ ! -f orchestrator/state/current-task.json ] && [ ! -f orchestrator/state/task-history.jsonl ]; then
-  echo "  hint: no task history found — try /start"
+# Active task (if configured)
+if [ -n "$STATE_FILE" ] && [ -f "$STATE_FILE" ]; then
+  if command -v jq >/dev/null 2>&1; then
+    task_id=$(jq -r '.id // "unknown"' "$STATE_FILE" 2>/dev/null || echo "unreadable")
+    task_status=$(jq -r '.status // "unknown"' "$STATE_FILE" 2>/dev/null || echo "unreadable")
+    echo "  active task: $task_id ($task_status)"
+  fi
 fi
 
-echo "[orchestrator] ready"
+echo "[session] ready"
 exit 0
