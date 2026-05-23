@@ -1,0 +1,94 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-start.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/validate-state-json.sh"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git push*)",
+            "command": "echo '{\"systemMessage\": \"GIT PUSH: Push operations require manual confirmation. Verify before proceeding.\", \"continue\": true}'"
+          },
+          {
+            "type": "command",
+            "if": "Bash(git commit*)",
+            "command": "echo '{\"systemMessage\": \"PRE-COMMIT: Run /code-review on staged changes first. If already reviewed, proceed.\", \"continue\": true}'"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/validate-connector-change.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/auto-review.sh"
+          },
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Code changed: run /code-review, then /security-review, then /code-simplify on the modified files.\"}'"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Session ending: run /claude-md-management (revise-claude-md) to capture learnings in project knowledge base.\"}'"
+          }
+        ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/memory-update.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo '{\"systemMessage\": \"Command failed. Review the error above and retry the operation if appropriate.\"}'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "*"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
