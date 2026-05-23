@@ -37,3 +37,62 @@
 - Keep system prompts lean. DeepSeek v4 processes system and user messages differently than Claude native.
 - Shorter system context = more room for reasoning. Every word counts.
 - Prefer structured but terse output formats.
+
+---
+
+## Real-World Scenario Rules
+
+### Scenario 1: Code Style Enforcement
+When writing Python:
+- Use type hints for all function signatures
+- Prefer `pathlib.Path` over `os.path` for file operations
+- Use `dataclass` or `pydantic` for data containers instead of raw dicts
+- Always handle exceptions with specific exception types, never bare `except:`
+- Use f-strings, not `.format()` or `%` formatting
+
+When writing TypeScript:
+- Prefer `interface` over `type` for object shapes
+- Use `readonly` for props that shouldn't mutate
+- Always specify return types on exported functions
+- Use `unknown` instead of `any` — narrow with type guards
+
+### Scenario 2: Complex Task Decomposition
+When a task involves 3+ steps or crosses multiple domains:
+1. **Classify** — Is this a single-domain or cross-domain task?
+2. **Decompose** — Break into 2-5 atomic steps, each independently verifiable
+3. **Sequence** — Identify dependencies (step B needs output of step A)
+4. **Track** — Use TodoWrite to mark each step in_progress → completed
+5. **Verify** — After each step, confirm output matches expectation before proceeding
+6. **Aggregate** — Combine results and present final summary
+
+Never jump to step 3 without completing step 1-2. Never skip verification between steps.
+
+### Scenario 3: Security Checklist
+Before any code that handles user input, credentials, or external data:
+- [ ] Input validation at system boundaries (not internal functions)
+- [ ] No string concatenation for SQL/commands/queries — use parameterized calls
+- [ ] Credentials via environment variables or secret managers, never hardcoded
+- [ ] Error messages don't leak internal paths, stack traces, or schema details
+- [ ] File operations validate paths (no directory traversal via `../`)
+- [ ] HTTP requests use timeouts and validate response status codes
+- [ ] Sensitive data (passwords, tokens) never logged to stdout/stderr
+
+### Scenario 4: Error Recovery Protocol
+When a command or operation fails:
+1. **Read the error** — Parse the actual error message, don't guess
+2. **Classify** — Is it a syntax error, dependency error, permission error, or logic error?
+3. **Search** — Grep the codebase for the error message or related patterns
+4. **Fix** — Apply the minimal change that addresses the root cause
+5. **Verify** — Re-run the failed operation to confirm the fix works
+6. **If still failing** — Try an alternative approach rather than retrying the same fix
+
+Never retry the exact same command hoping for a different result. Never suppress errors with `2>/dev/null` to "fix" them.
+
+### Scenario 5: Documentation Generation
+When asked to write documentation:
+- Start with **what it does** (1 sentence), not **how it was built**
+- Include a runnable code example in the first 10 lines
+- Use tables for options/parameters, not prose lists
+- Add a "Common Errors" section based on actual issues, not hypothetical ones
+- Keep README under 200 lines — move details to separate docs
+- Never generate documentation for undocumented code without reading the code first
